@@ -109,7 +109,7 @@ namespace MongoCopy
 		{
 			if (!string.IsNullOrEmpty(dateField) && fromDate != null)
 			{
-				return collection.CountDocuments(Builders<BsonDocument>.Filter.Gt(dateField, fromDate));
+				return collection.CountDocuments(Builders<BsonDocument>.Filter.Gte(dateField, fromDate));
 			}
 			else
 			{
@@ -121,7 +121,7 @@ namespace MongoCopy
 		{
 			if (fromDate != null)
 			{
-				return collection.Find(Builders<BsonDocument>.Filter.Gt(dateField, fromDate)).Sort(Builders<BsonDocument>.Sort.Ascending(dateField));
+				return collection.Find(Builders<BsonDocument>.Filter.Gte(dateField, fromDate)).Sort(Builders<BsonDocument>.Sort.Ascending(dateField));
 			}
 			else
 			{
