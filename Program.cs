@@ -17,7 +17,7 @@ namespace MongoCopy
                 return;
             }
 
-            MongoCopyCollection.run(regularArgs[0], regularArgs[1], regularArgs[2], regularArgs.Length == 4 ? args[3] : null, excludeFields);
+            MongoCopyCollection.run(regularArgs[0], regularArgs[1], regularArgs[2], regularArgs.Length == 4 ? regularArgs[3] : null, excludeFields);
 		}
 	}
 }
