@@ -31,20 +31,48 @@ namespace MongoCopy
 
 			long inserted = 0;
 
-			foreach (BsonValue docID in queryDocuments(srcCollection, dateField, fromDate).Project(x => x["_id"]).ToEnumerable())
-			{
-                var filter = Builders<BsonDocument>.Filter.Eq("_id", docID);
+            var docs = projectionDefinition != null
+                            ? queryDocuments(srcCollection, dateField, fromDate).Project(projectionDefinition)
+                            : queryDocuments(srcCollection, dateField, fromDate);
 
-                BsonDocument doc;
+            BsonValue lastSuccessID = null;
+
+            foreach (var doc in docs.ToEnumerable())
+			{
                 try
 				{
+					destCollection.InsertOne(doc);
+                    lastSuccessID = doc["_id"];
+
+                }
+				catch (MongoWriteException e)
+				{
+                    if (!e.ToString().Contains("E11000 duplicate key error collection"))
+                    {
+                        if (lastSuccessID != null) Console.WriteLine("Last successfully inserted document _id = " + lastSuccessID);
+                        throw;
+                    }
+				}
+				inserted++;
+
+				if (inserted % 100 == 0) Console.WriteLine(inserted + " / " + count + " (" + Math.Round((double)inserted / count * 100) + "%)");
+			}
+
+            /*
+            foreach (BsonValue docID in queryDocuments(srcCollection, dateField, fromDate).Project(x => x["_id"]).ToEnumerable())
+            {
+                var filter = Builders<BsonDocument>.Filter.Eq("_id", docID);    
+                
+                BsonDocument doc;
+                try
+                {
                     doc = projectionDefinition != null
                             ? srcCollection.Find(filter).Project(projectionDefinition).First()
                             : srcCollection.Find(filter).First();
                 }
-				catch (InvalidOperationException e)
-				{
-					Console.WriteLine("Error during process document _id = " + docID);
+                catch (InvalidOperationException e)         
+                {
+                    Console.WriteLine("Error during process document _id = " + docID);
                     Console.WriteLine("Exception message: " + e.Message);
                     return;
                 }
@@ -60,9 +88,10 @@ namespace MongoCopy
 				inserted++;
 
 				if (inserted % 100 == 0) Console.WriteLine(inserted + " / " + count + " (" + Math.Round((double)inserted / count * 100) + "%)");
-			}
+            }
+            */
 
-			Console.WriteLine(inserted + " / " + count + " (" + Math.Round((double)inserted / count * 100) + "%)");
+            Console.WriteLine(inserted + " / " + count + " (" + Math.Round((double)inserted / count * 100) + "%)");
 		}
 
 		static BsonValue getMaxDate(IMongoCollection<BsonDocument> collection, string dateField)
